@@ -2,32 +2,30 @@ use std::collections::HashMap;
 
 use metric::Metric;
 
-pub trait Registry<'a> {
-    fn get(&'a self, name: &'a str) -> &'a Metric;
+pub trait Registry<T: Metric> {
+    fn get<T>(&self, name: &str) -> Option<&T>;
 
-    fn insert<T: Metric + 'a>(&mut self, name: &'a str, metric: T);
+    fn insert<T>(&mut self, name: &str, metric: T);
 }
 
-pub struct StdRegistry<'a> {
-    metrics: HashMap<&'a str, Box<Metric + 'a>>,
+pub struct StdRegistry<T: Metric> {
+    metrics: HashMap<String, T>,
 }
 
 // Specific stuff for registry goes here
-impl<'a> Registry<'a> for StdRegistry<'a> {
-    fn get(&'a self, name: &'a str) -> &'a Metric {
-        &*self.metrics[name]
+impl<T: Metric> Registry<T> for StdRegistry<T> {
+    fn get<T>(&self, name: &str) -> Option<&T> {
+        self.metrics.get(&name.to_string())
     }
 
-    fn insert<T: Metric + 'a>(&mut self, name: &'a str, metric: T) {
-        let boxed: Box<Metric> = (box metric) as Box<Metric>;
-
-        self.metrics.insert(name, boxed);
+    fn insert<T>(&mut self, name: &str, metric: T) {
+        self.metrics.insert(name.to_string(), metric);
     }
 }
 
 // General StdRegistry
-impl<'a> StdRegistry<'a> {
-    fn new() -> StdRegistry<'a> {
+impl<T: Metric> StdRegistry<T> {
+    fn new() -> StdRegistry<T> {
         StdRegistry{
             metrics: HashMap::new()
         }
