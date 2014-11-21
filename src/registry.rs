@@ -2,31 +2,31 @@ use std::collections::HashMap;
 
 use metric::Metric;
 
-pub trait Registry<T: Metric> {
-    fn get<T>(&self, name: &str) -> Option<&T>;
+pub trait Registry<'a> {
+    fn get(&self, name: &str) -> Option<&Box<Metric+'a>>;
 
-    fn insert<T>(&mut self, name: &str, metric: T);
+    fn insert(&mut self, name: &str, metric: Box<Metric+'a>);
 }
 
-pub struct StdRegistry<T: Metric> {
-    metrics: HashMap<String, T>,
+pub struct StdRegistry<'a> {
+    metrics: HashMap<String, Box<Metric+'a>>,
 }
 
 // Specific stuff for registry goes here
-impl<T: Metric> Registry<T> for StdRegistry<T> {
-    fn get<T>(&self, name: &str) -> Option<&T> {
+impl<'a> Registry<'a> for StdRegistry<'a> {
+    fn get(&self, name: &str) -> Option<&Box<Metric+'a>> {
         self.metrics.get(&name.to_string())
     }
 
-    fn insert<T>(&mut self, name: &str, metric: T) {
+    fn insert(&mut self, name: &str, metric: Box<Metric+'a>) {
         self.metrics.insert(name.to_string(), metric);
     }
 }
 
 // General StdRegistry
-impl<T: Metric> StdRegistry<T> {
-    fn new() -> StdRegistry<T> {
-        StdRegistry{
+impl<'a> StdRegistry<'a> {
+    fn new() -> StdRegistry<'a> {
+        StdRegistry {
             metrics: HashMap::new()
         }
     }
@@ -43,7 +43,7 @@ mod test {
         let mut r: StdRegistry = StdRegistry::new();
         let mut m: StdMeter = StdMeter::new();
 
-        r.insert("foo", m);
+        r.insert("foo", box m);
         r.get("foo");
     }
 }
